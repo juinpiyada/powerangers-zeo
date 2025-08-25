@@ -99,7 +99,7 @@ db.query('SELECT NOW()')
   .then(({ rows }) => {
     console.log('✅ Connected to Postgres at', rows[0].now);
     app.listen(PORT, () => {
-      console.log(`🚀 Server running at http://localhost:${PORT}`);
+      console.log(`🚀 Server running at https://powerangers-zeo.vercel.app:${PORT}`);
     });
   })
   .catch((err) => {
