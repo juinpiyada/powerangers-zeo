@@ -41,15 +41,9 @@ const app = express();
 
 const PORT = process.env.PORT || 9090;
 
-// CORS Configuration - Allowing https://powerangers-zeo.vercel.app and all origins
+// CORS Configuration - Allowing all origins
 app.use(cors({
-  origin: (origin, callback) => {
-    if (origin === 'https://powerangers-zeo.vercel.app' || !origin) {
-      callback(null, true); // Allow the specified origin or allow no origin (i.e., any origin)
-    } else {
-      callback(new Error('Not allowed by CORS'), false); // Reject other origins
-    }
-  },
+  origin: '*',  // Allows all origins
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true, // If you want to support cookies or authorization headers
