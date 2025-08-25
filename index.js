@@ -43,7 +43,7 @@ const PORT = process.env.PORT || 9090;
 
 // Enable CORS`
 app.use(cors({
-  origin: 'http://localhost:5173', // Adjust to your frontend port
+  origin: 'https://terminatorapp.vercel.app', // Adjust to your frontend port
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
