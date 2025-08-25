@@ -21,7 +21,7 @@ const MasterRole = require('./routes/master_role_api'); // Assuming you have thi
 const DailyRoutine = require('./routes/college_daily_routine_api');
 const classroomAPI = require('./routes/classroomapi');
 const teacherAvailabilityRoutes = require('./routes/teacher_availbility_api');
-const collegedailyroutineRoutes= require('./routes/college_daily_routine_api');
+const collegedailyroutineRoutes = require('./routes/college_daily_routine_api');
 const courseofferingRoutes = require('./routes/course_offering_api'); // Assuming you have this route
 const courseregistrationRoutes = require('./routes/course_registration_api'); // Assuming you have this route
 const collegeexamroutineRoutes = require('./routes/college_exam_routine_api'); // Assuming you have this route
@@ -32,8 +32,8 @@ const EmployeeAttendanceManager = require('./routes/employee_attendance_api'); /
 const ExamResult = require('./routes/college_exam_result_api'); // Assuming you have this route
 const chartDataApi = require('./routes/chart_data');
 const calendarattendance = require('./routes/calendar-attendance'); // Assuming you have this route
-const cmsFeeStructure= require('./routes/cmsFeeStructure');
-const cmsPayment= require('./routes/cmsPayment');
+const cmsFeeStructure = require('./routes/cmsFeeStructure');
+const cmsPayment = require('./routes/cmsPayment');
 const cmsStudentFeeInvoice = require('./routes/cmsStudentFeeInvoice');
 const cmsStuScholarship = require('./routes/cmsStuScholarship'); // Assuming you have this route
 
@@ -41,11 +41,12 @@ const app = express();
 
 const PORT = process.env.PORT || 9090;
 
-// Enable CORS`
+// Enable CORS - Allowing all origins
 app.use(cors({
-  origin: 'https://terminatorapp.vercel.app', // Adjust to your frontend port
+  origin: '*', // Allows all origins
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true, // If you want to support cookies or authorization headers
 }));
 
 // Parse JSON bodies
@@ -84,10 +85,8 @@ app.use('/api/chart-data', chartDataApi);
 app.use('/api/calendar-attendance', calendarattendance);
 app.use('/api/cms-fee-structure', cmsFeeStructure);
 app.use('/api/cms-payments', cmsPayment);
-app.use('/api/cms-student-fee-invoice',cmsStudentFeeInvoice);
-app.use('/api/cms-stu-scholarship',cmsStuScholarship); // Assuming you have this route
-
-
+app.use('/api/cms-student-fee-invoice', cmsStudentFeeInvoice);
+app.use('/api/cms-stu-scholarship', cmsStuScholarship); // Assuming you have this route
 
 // Health-check
 app.get('/', (req, res) => {
