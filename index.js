@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
+const compression = require('compression');
 const db = require('./config/db_conn');
+const { Pool } = require('pg'); // PostgreSQL pool for connection pooling
 
 // All your route imports (paths should be correct and match filenames)
 const loginRouter = require('./routes/user');
@@ -22,35 +24,53 @@ const DailyRoutine = require('./routes/college_daily_routine_api');
 const classroomAPI = require('./routes/classroomapi');
 const teacherAvailabilityRoutes = require('./routes/teacher_availbility_api');
 const collegedailyroutineRoutes = require('./routes/college_daily_routine_api');
-const courseofferingRoutes = require('./routes/course_offering_api'); // Assuming you have this route
-const courseregistrationRoutes = require('./routes/course_registration_api'); // Assuming you have this route
-const collegeexamroutineRoutes = require('./routes/college_exam_routine_api'); // Assuming you have this route
-const subjectelecRoutes = require('./routes/subjectelec'); // Assuming you have this route
-const examroutineRoutes = require('./routes/college_exam_routine_api'); // Assuming you have this route
-const CollegeAttendenceManager = require('./routes/college_attendance_api'); // Assuming you have this route
-const EmployeeAttendanceManager = require('./routes/employee_attendance_api'); // Assuming you have this route
-const ExamResult = require('./routes/college_exam_result_api'); // Assuming you have this route
+const courseofferingRoutes = require('./routes/course_offering_api');
+const courseregistrationRoutes = require('./routes/course_registration_api');
+const collegeexamroutineRoutes = require('./routes/college_exam_routine_api');
+const subjectelecRoutes = require('./routes/subjectelec');
+const examroutineRoutes = require('./routes/college_exam_routine_api');
+const CollegeAttendenceManager = require('./routes/college_attendance_api');
+const EmployeeAttendanceManager = require('./routes/employee_attendance_api');
+const ExamResult = require('./routes/college_exam_result_api');
 const chartDataApi = require('./routes/chart_data');
-const calendarattendance = require('./routes/calendar-attendance'); // Assuming you have this route
+const calendarattendance = require('./routes/calendar-attendance');
 const cmsFeeStructure = require('./routes/cmsFeeStructure');
 const cmsPayment = require('./routes/cmsPayment');
 const cmsStudentFeeInvoice = require('./routes/cmsStudentFeeInvoice');
-const cmsStuScholarship = require('./routes/cmsStuScholarship'); // Assuming you have this route
+const cmsStuScholarship = require('./routes/cmsStuScholarship');
 
 const app = express();
 
 const PORT = process.env.PORT || 9090;
 
-// Enable CORS - Allowing all origins
+// CORS Configuration - Allowing all origins for testing purposes
 app.use(cors({
-  origin: '*', // Allows all origins
+  origin: '*', // Allows all origins for testing (for production use specify allowed domains)
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true, // If you want to support cookies or authorization headers
 }));
 
-// Parse JSON bodies
-app.use(express.json());
+// Use compression to reduce the size of response bodies (for faster response times)
+app.use(compression());
+
+// Use body-parser with a limit for large payloads
+app.use(express.json({ limit: '10mb' }));
+
+// Database connection pooling to improve performance
+const pool = new Pool({
+  user: 'avnadmin',
+  host: 'pg-f24ca1b-juinpiyada1-db52.e.aivencloud.com',
+  database: 'sms_db',
+  password: 'AVNS_02ltDOcBtt0byI5MRf0',
+  port: '10005', // Default PostgreSQL port
+});
+
+// Attaching the pool to each request to use for queries
+app.use((req, res, next) => {
+  req.db = pool;
+  next();
+});
 
 // ROUTES
 app.use('/login', loginRouter);
@@ -61,36 +81,44 @@ app.use('/api/course', courseRoutes);
 app.use('/api/subject', subjectRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/teacher', teacherRoutes);
-app.use('/api/master-depts', masterDeptsRoutes); // Use /api for consistency
+app.use('/api/master-depts', masterDeptsRoutes);
 app.use('/api/master-acadyear', collegeAcadYearRoutes);
 app.use('/api/subject-course', subjectCourseRoutes);
 app.use('/api/menu-master', mastermenuRoutes);
 app.use('/api/subject-teacher', masterSubjectTeacherRoutes);
 app.use('/api/user-role', userRoleApi);
-app.use('/api/master-role', MasterRole); // Assuming you have this route
+app.use('/api/master-role', MasterRole);
 app.use('/api/daily-routine', DailyRoutine);
 app.use('/api/class-room', classroomAPI);
 app.use('/api/teacher-availability-manager', teacherAvailabilityRoutes);
 app.use('/api/college-daily-routine', collegedailyroutineRoutes);
-app.use('/api/course-offering', courseofferingRoutes); // Assuming you have this route
-app.use('/api/course-registration', courseregistrationRoutes); // Assuming you have this route
-app.use('/api/college-exam-routine', collegeexamroutineRoutes); // Assuming you have this route
-app.use('/api/subject-elective', subjectelecRoutes); // Assuming you have this route
-app.use('/api/exam-routine-manager', examroutineRoutes); // Assuming you have this route
-app.use('/api/course-registration', courseregistrationRoutes); // Assuming you have this route
-app.use('/api/CollegeAttendenceManager', CollegeAttendenceManager); // Assuming you have this route
-app.use('/api/employee-attendance', EmployeeAttendanceManager); // Assuming you have this route
-app.use('/api/exam-result', ExamResult); // Assuming you have this route
+app.use('/api/course-offering', courseofferingRoutes);
+app.use('/api/course-registration', courseregistrationRoutes);
+app.use('/api/college-exam-routine', collegeexamroutineRoutes);
+app.use('/api/subject-elective', subjectelecRoutes);
+app.use('/api/exam-routine-manager', examroutineRoutes);
+app.use('/api/course-registration', courseregistrationRoutes);
+app.use('/api/CollegeAttendenceManager', CollegeAttendenceManager);
+app.use('/api/employee-attendance', EmployeeAttendanceManager);
+app.use('/api/exam-result', ExamResult);
 app.use('/api/chart-data', chartDataApi);
 app.use('/api/calendar-attendance', calendarattendance);
 app.use('/api/cms-fee-structure', cmsFeeStructure);
 app.use('/api/cms-payments', cmsPayment);
 app.use('/api/cms-student-fee-invoice', cmsStudentFeeInvoice);
-app.use('/api/cms-stu-scholarship', cmsStuScholarship); // Assuming you have this route
+app.use('/api/cms-stu-scholarship', cmsStuScholarship);
 
-// Health-check
+// Health-check for the server
 app.get('/', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// Handle timeouts for slow requests
+app.use((req, res, next) => {
+  res.setTimeout(5000, () => {  // Timeout after 5 seconds
+    res.status(408).send('Request Timeout');
+  });
+  next();
 });
 
 // Database check and server start
