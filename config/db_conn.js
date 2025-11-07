@@ -1,7 +1,7 @@
-const { Pool } = require('pg');
-require('dotenv').config();  // To load environment variables from the .env file
+const { Pool } = require("pg");
+require("dotenv").config();
 
-// SSL Certificate from the second block
+// SSL Cert (from the sacred second block ✨)
 const sslConfig = {
   rejectUnauthorized: true,
   ca: `-----BEGIN CERTIFICATE-----
@@ -29,24 +29,22 @@ MWcsBiXBWUUhoFkYtG1u1MroP1rTJZ1MqJNRapdx6Mv1TVV6VydlzBxVH07bZW/Z
 Az5BT6/GESHojXivhI+5LqMoFMRNoH52ZD1UB88y3Sv60YKofICOkehckfEvqC0y
 citumPU3BjznfkqlNJHv+Y7dHhVoBtr/v3Esz1I5Y08W7Buq1b3sA2crR5dJDxt6
 23QfoA==
------END CERTIFICATE-----`
+-----END CERTIFICATE-----`,
 };
 
-// Create a new pool instance with SSL settings
 const pool = new Pool({
   host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
+  port: parseInt(process.env.DB_PORT || "5432"),
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  ssl: sslConfig  // Added SSL configuration
+  ssl: sslConfig,
 });
 
-// Handle pool errors
-pool.on('error', (err) => {
-  console.error('Unexpected error on idle client', err);
-  process.exit(-1);
+// Vercel-safe: no exit(), just vibes and logs
+pool.on("error", (err) => {
+  console.error("🔥 DB Pool Error (vibes still intact):", err.message);
 });
 
-// Export pool for external use
+// Export like the prophecies intended
 module.exports = pool;
