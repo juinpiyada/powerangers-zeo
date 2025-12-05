@@ -36,14 +36,6 @@ function getRange(query) {
   return { start: qStart, endExclusive };
 }
 
-/* ============ Identifier resolution ============ */
-/**
- * Given any hint for a student (email/username, stuuserid, studentid, rollno, etc.),
- * resolve to a list of possible values for college_attendance.attuserid.
- *
- * We keep this conservative and only touch student_master + master_user.
- * If your schema uses different column names, add them in the WHERE clause.
- */
 
 // Resolves any student hint (email/username/roll/ids) -> canonical values for college_attendance.attuserid
 async function resolveStudentUserIds(raw) {
