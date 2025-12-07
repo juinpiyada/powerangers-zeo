@@ -1,6 +1,7 @@
-const swaggerAutogen = require('swagger-autogen')();
+// swagger.js
+// Run: node swagger.js
 
-const isVercel = !!process.env.VERCEL;
+const swaggerAutogen = require('swagger-autogen')({ openapi: '2.0' });
 
 const doc = {
   info: {
@@ -8,13 +9,15 @@ const doc = {
     description: 'Swagger documentation for CampusOne School Management System backend APIs',
     version: '1.0.0',
   },
-  host: isVercel ? 'powerangers-zeo.vercel.app' : 'localhost:9090',
-  schemes: [isVercel ? 'https' : 'http'],
-  basePath: '/',
+  basePath: '/',               // keep
   consumes: ['application/json'],
   produces: ['application/json'],
+  // ✅ DO NOT set host/schemes here (works for localhost + vercel automatically)
 };
 
-swaggerAutogen('./swagger-output.json', ['./index.js'], doc).then(() => {
-  console.log('✅ swagger-output.json generated!');
+const outputFile = './swagger-output.json';
+const endpointsFiles = ['./index.js'];
+
+swaggerAutogen(outputFile, endpointsFiles, doc).then(() => {
+  console.log('✅ swagger-output.json generated successfully!');
 });
