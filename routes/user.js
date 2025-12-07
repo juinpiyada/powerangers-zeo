@@ -2,31 +2,6 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db_conn');
-const { auditLogger } = require('../utils/auditLogger');
-
-/* -------------------------------------------------------------------------- */
-/*                          Safe wrappers for audit log                       */
-/* -------------------------------------------------------------------------- */
-const safeAudit = {
-  loginFailed: async (userid, reason, req, meta = {}) => {
-    try {
-      if (auditLogger?.loginFailed) {
-        await auditLogger.loginFailed(userid, reason, req, meta);
-      }
-    } catch (e) {
-      console.warn('⚠️ auditLogger.loginFailed error:', e.message);
-    }
-  },
-  loginSuccess: async (userid, roles, req, meta = {}) => {
-    try {
-      if (auditLogger?.loginSuccess) {
-        await auditLogger.loginSuccess(userid, roles, req, meta);
-      }
-    } catch (e) {
-      console.warn('⚠️ auditLogger.loginSuccess error:', e.message);
-    }
-  }
-};
 
 /* -------------------------------------------------------------------------- */
 /*                    Helper: SPA-safe + optional HTTP redirect               */
@@ -66,8 +41,7 @@ router.get('/test', (req, res) => {
   res.json({
     message: 'Login route is working',
     timestamp: new Date().toISOString(),
-    route: '/login/test',
-    audit_logger_loaded: !!require('../utils/auditLogger')
+    route: '/login/test'
   });
 });
 
@@ -78,15 +52,10 @@ router.post('/', async (req, res) => {
     username: req.body?.username,
     password_provided: !!req.body?.password
   });
+
   const { username, password } = req.body;
 
   if (!username || !password) {
-    await safeAudit.loginFailed(username || 'unknown', 'Missing username or password', req, {
-      attempted_login: true,
-      missing_credentials: true,
-      username_provided: !!username,
-      password_provided: !!password
-    });
     return res.status(400).json({ error: 'Username and password are required' });
   }
 
@@ -156,32 +125,17 @@ router.post('/', async (req, res) => {
     const result = await db.query(sql, [username]);
 
     if (result.rowCount === 0) {
-      await safeAudit.loginFailed(username, 'User not found', req, {
-        attempted_login: true,
-        user_exists: false
-      });
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     const row = result.rows[0];
 
     if (!row.useractive) {
-      await safeAudit.loginFailed(username, 'Account is inactive', req, {
-        attempted_login: true,
-        user_exists: true,
-        account_active: false
-      });
       return res.status(403).json({ error: 'Account is inactive' });
     }
 
     // (Plain-text) password match per current schema
     if (password !== row.userpwd) {
-      await safeAudit.loginFailed(username, 'Invalid password', req, {
-        attempted_login: true,
-        user_exists: true,
-        account_active: row.useractive,
-        password_match: false
-      });
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
@@ -195,19 +149,18 @@ router.post('/', async (req, res) => {
     } catch (e) {
       console.warn('⚠️ Failed to update userlastlogon for', username, e.message);
     }
-    
+
     // Roles → normalize (case-insensitive, spaces/dashes -> underscore)
-const canon = (s) => String(s || '')
-  .trim()
-  .replace(/[\s\-]+/g, '_')     // spaces/dashes -> _
-  .replace(/[^\w]/g, '_')       // any other punct -> _
-  .toUpperCase();
+    const canon = (s) => String(s || '')
+      .trim()
+      .replace(/[\s\-]+/g, '_')     // spaces/dashes -> _
+      .replace(/[^\w]/g, '_')       // any other punct -> _
+      .toUpperCase();
 
-const roles = String(row.userroles || '')
-  .split(/[,\s]+/)
-  .map(canon)
-  .filter(Boolean);
-
+    const roles = String(row.userroles || '')
+      .split(/[,\s]+/)
+      .map(canon)
+      .filter(Boolean);
 
     // Extras for client session
     const extras = {
@@ -251,36 +204,27 @@ const roles = String(row.userroles || '')
       active_group_id: row.active_group_id ?? null
     };
 
-    // Core responder (includes audit + optional redirect)
+    // Core responder (no audit log)
     const send = async ({ payload, redirectUrl = null }) => {
-      await safeAudit.loginSuccess(username, roles, req, {
-        user_role: payload.user_role,
-        role_description: payload.role_description,
-        college_id: extras.college_id,
-        college_name: extras.college_name,
-        group_id: extras.group_id
-      });
-
       const body = {
         ...payload,
         userid: username,
         roles,
         ...extras
       };
-
       return maybeRedirect(req, res, redirectUrl, body);
     };
 
     const hasAny = (arr, list) => arr.some(r => list.includes(r));
 
     // === Role mapping + finance redirects (canonical tokens) ===
-if (hasAny(roles, ['ADMIN', 'SUPER_ADMIN', 'SUPERADMIN', 'SMS_SUPERADM'])) {
-  return await send({
-    payload: {
-      message: 'Admin login successful',
-      user_role: 'admin',
-      role_description: 'Admin / Super Admin User'
-    },
+    if (hasAny(roles, ['ADMIN', 'SUPER_ADMIN', 'SUPERADMIN', 'SMS_SUPERADM'])) {
+      return await send({
+        payload: {
+          message: 'Admin login successful',
+          user_role: 'admin',
+          role_description: 'Admin / Super Admin User'
+        }
       });
     } else if (roles.includes('STU_ONBOARD')) {
       return await send({
@@ -290,10 +234,15 @@ if (hasAny(roles, ['ADMIN', 'SUPER_ADMIN', 'SUPERADMIN', 'SMS_SUPERADM'])) {
           role_description: 'Onboard Student User'
         }
       });
-    } else if (roles.includes('STU_CURR') || roles.includes('STU-CURR')) { // ← fixed
-  return await send({
-    payload: { message: 'Current Student login successful', user_role: 'student', role_description: 'Current Student User' }
-  });
+    } else if (roles.includes('STU_CURR') || roles.includes('STU-CURR')) {
+      // NOTE: roles are canonicalized to underscore, but kept your extra check as requested
+      return await send({
+        payload: {
+          message: 'Current Student login successful',
+          user_role: 'student',
+          role_description: 'Current Student User'
+        }
+      });
     } else if (roles.includes('STU_PASSED')) {
       return await send({
         payload: {
@@ -310,7 +259,7 @@ if (hasAny(roles, ['ADMIN', 'SUPER_ADMIN', 'SUPERADMIN', 'SMS_SUPERADM'])) {
           role_description: 'Teacher User'
         }
       });
-          } else if (roles.includes('STU_COUNCIL')) {
+    } else if (roles.includes('STU_COUNCIL')) {
       return await send({
         payload: {
           message: 'Student Council login successful',
@@ -318,7 +267,6 @@ if (hasAny(roles, ['ADMIN', 'SUPER_ADMIN', 'SUPERADMIN', 'SMS_SUPERADM'])) {
           role_description: 'Student Council User'
         }
       });
-
     } else if (roles.includes('GRP_ADM')) {
       return await send({
         payload: {
@@ -370,15 +318,15 @@ if (hasAny(roles, ['ADMIN', 'SUPER_ADMIN', 'SUPERADMIN', 'SMS_SUPERADM'])) {
         redirectUrl: '/finDashbord'
       });
     } else if (roles.includes('FIN_ACT')) {
-       // 🔸 Finance User → redirect to /finDashbord
-       return await send({
-         payload: {
-           message: 'Finance login successful',
-           user_role: 'finance',
-           role_description: 'Finance User'
-         },
-         redirectUrl: '/finDashbord'
-       });
+      // 🔸 Finance User → redirect to /finDashbord
+      return await send({
+        payload: {
+          message: 'Finance login successful',
+          user_role: 'finance',
+          role_description: 'Finance User'
+        },
+        redirectUrl: '/finDashbord'
+      });
     } else if (roles.includes('HR_LEAVE')) {
       return await send({
         payload: {
@@ -404,26 +352,10 @@ if (hasAny(roles, ['ADMIN', 'SUPER_ADMIN', 'SUPERADMIN', 'SMS_SUPERADM'])) {
         }
       });
     } else {
-      await safeAudit.loginFailed(username, 'Insufficient permissions', req, {
-        attempted_login: true,
-        user_exists: true,
-        account_active: row.useractive,
-        password_match: true,
-        user_roles: roles,
-        insufficient_permissions: true
-      });
       return res.status(403).json({ error: 'Insufficient permissions' });
     }
   } catch (err) {
     console.error('Error during login process:', err);
-
-    await safeAudit.loginFailed(username || 'unknown', 'System error during login', req, {
-      attempted_login: true,
-      system_error: true,
-      error_message: err.message,
-      error_stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
-    });
-
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
