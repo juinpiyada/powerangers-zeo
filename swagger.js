@@ -1,21 +1,20 @@
 const swaggerAutogen = require('swagger-autogen')();
 
+const isVercel = !!process.env.VERCEL;
+
 const doc = {
   info: {
     title: 'CampusOne SMS API',
     description: 'Swagger documentation for CampusOne School Management System backend APIs',
     version: '1.0.0',
   },
-  host: 'localhost:9090',
-  schemes: ['http'],
+  host: isVercel ? 'powerangers-zeo.vercel.app' : 'localhost:9090',
+  schemes: [isVercel ? 'https' : 'http'],
   basePath: '/',
   consumes: ['application/json'],
   produces: ['application/json'],
 };
 
-const outputFile = './swagger-output.json';
-const endpointsFiles = ['./index.js'];
-
-swaggerAutogen(outputFile, endpointsFiles, doc).then(() => {
+swaggerAutogen('./swagger-output.json', ['./index.js'], doc).then(() => {
   console.log('✅ swagger-output.json generated!');
 });
