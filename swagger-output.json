@@ -5,10 +5,10 @@
     "description": "Swagger documentation for CampusOne School Management System backend APIs",
     "version": "1.0.0"
   },
-  "host": "powerangers-zeo.vercel.app",
+  "host": "localhost:9090",
   "basePath": "/",
   "schemes": [
-    "https"
+    "http"
   ],
   "consumes": [
     "application/json"
