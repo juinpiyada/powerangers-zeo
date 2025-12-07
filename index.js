@@ -1,3 +1,6 @@
+// index.js
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const db = require('./config/db_conn');
@@ -24,7 +27,10 @@ const masterDeptsRoutes = require('./routes/master_depts');
 const collegeAcadYearRoutes = require('./routes/master_acadyear_api');
 const subjectCourseRoutes = require('./routes/subject_course_api');
 const mastermenuRoutes = require('./routes/menu_master_api');
-const masterSubjectTeacherRoutes = require('./routes/master_teacher_api'); // (check: your original had subject_teacher_api here)
+
+// ✅ FIX: this must be subject_teacher_api (not master_teacher_api)
+const masterSubjectTeacherRoutes = require('./routes/subject_teacher_api');
+
 const userRoleApi = require('./routes/user_role_api');
 const MasterRole = require('./routes/master_role_api');
 const DailyRoutine = require('./routes/college_daily_routine_api');
@@ -51,8 +57,10 @@ const app = express();
 // ✅ localhost default PORT
 const PORT = process.env.PORT || 9090;
 
-// ✅ Use this to print correct base URL in logs
+// ✅ detect vercel
 const isVercel = !!process.env.VERCEL;
+
+// ✅ compute base url
 const BASE_URL =
   process.env.BASE_URL ||
   (isVercel ? 'https://powerangers-zeo.vercel.app' : `http://localhost:${PORT}`);
@@ -60,7 +68,7 @@ const BASE_URL =
 // ---------------- Middleware ----------------
 app.use(cors({
   origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
 }));
@@ -124,24 +132,26 @@ app.get('/', (req, res) => {
   });
 });
 
-// ✅ Vercel serverless: don't call listen()
-// ✅ Localhost: call listen()
-async function start() {
+// ✅ Localhost only: start server
+async function startLocal() {
   try {
     const { rows } = await db.query('SELECT NOW()');
     console.log('✅ Connected to Postgres at', rows[0].now);
 
-    if (!isVercel) {
-      app.listen(PORT, () => {
-        console.log(`🚀 Server running at ${BASE_URL}`);
-        console.log(`📚 Swagger Docs at ${BASE_URL}/docs`);
-      });
-    }
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running at ${BASE_URL}`);
+      console.log(`📚 Swagger Docs at ${BASE_URL}/docs`);
+    });
   } catch (err) {
     console.error('❌ Could not connect to Postgres:', err);
-    if (!isVercel) process.exit(1);
+    process.exit(1);
   }
 }
-start();
 
+// ✅ Only run listen() if this file is executed directly (node index.js)
+if (!isVercel && require.main === module) {
+  startLocal();
+}
 
+// ✅ export for Vercel
+module.exports = app;
