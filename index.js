@@ -144,5 +144,4 @@ async function start() {
 }
 start();
 
-// ✅ export for Vercel
-module.exports = app;
+
