@@ -1,4 +1,3 @@
-// swagger.js
 const swaggerAutogen = require('swagger-autogen')();
 
 const doc = {
@@ -7,9 +6,9 @@ const doc = {
     description: 'Swagger documentation for CampusOne School Management System backend APIs',
     version: '1.0.0',
   },
-  host: 'powerangers-zeo.vercel.app',
-  schemes: ['https'],
-  basePath: '/api', // change to '/' if you are NOT using /api prefix
+  host: 'localhost:9090',
+  schemes: ['http'],
+  basePath: '/',
   consumes: ['application/json'],
   produces: ['application/json'],
 };
@@ -18,5 +17,5 @@ const outputFile = './swagger-output.json';
 const endpointsFiles = ['./index.js'];
 
 swaggerAutogen(outputFile, endpointsFiles, doc).then(() => {
-  console.log('✅ swagger-output.json generated successfully!');
+  console.log('✅ swagger-output.json generated!');
 });
