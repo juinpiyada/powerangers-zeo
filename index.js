@@ -51,6 +51,7 @@ const cmsFeeStructure = require('./routes/cmsFeeStructure');
 const cmsPayment = require('./routes/cmsPayment');
 const cmsStudentFeeInvoice = require('./routes/cmsStudentFeeInvoice');
 const cmsStuScholarship = require('./routes/cmsStuScholarship');
+const teacherDtlsApi = require('./routes/teacher_dtls_api');
 
 const app = express();
 
@@ -121,6 +122,7 @@ app.use('/api/cms-fee-structure', cmsFeeStructure);
 app.use('/api/cms-payments', cmsPayment);
 app.use('/api/cms-student-fee-invoice', cmsStudentFeeInvoice);
 app.use('/api/cms-stu-scholarship', cmsStuScholarship);
+app.use('/api/teacher-dtls', teacherDtlsApi);
 
 // ---------------- Health-check ----------------
 app.get('/', (req, res) => {
