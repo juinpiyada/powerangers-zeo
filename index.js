@@ -52,6 +52,14 @@ const cmsPayment = require('./routes/cmsPayment');
 const cmsStudentFeeInvoice = require('./routes/cmsStudentFeeInvoice');
 const cmsStuScholarship = require('./routes/cmsStuScholarship');
 
+// New Routes (Version 2)
+const teacherDtlsApi = require('./routes/teacher_dtls_api'); // New route
+const studentAyRoutes = require('./routes/student_ay'); // New route
+const teacherMasterRoutes = require('./routes/teacher_master_bulk_up'); // New route
+const examResultApi = require('./routes/exam_result_api'); // New route
+const masterFetcher = require('./routes/master_fetcher'); // New route
+const smsDeviceRoutes = require('./routes/smsDeviceRoutes'); // New route
+const demandLettersRouter = require('./routes/demandLetters'); // New route
 
 const app = express();
 
@@ -123,6 +131,14 @@ app.use('/api/cms-payments', cmsPayment);
 app.use('/api/cms-student-fee-invoice', cmsStudentFeeInvoice);
 app.use('/api/cms-stu-scholarship', cmsStuScholarship);
 
+// New Routes (Version 2)
+app.use('/api/teacher-dtls', teacherDtlsApi); // New route
+app.use('/api/student-ay', studentAyRoutes); // New route
+app.use('/api/teacher-master-bulk-up', teacherMasterRoutes); // New route
+app.use('/api/exam-result-raw', examResultApi); // New route
+app.use('/api/master', masterFetcher); // New route
+app.use('/api/sms-device', smsDeviceRoutes); // New route
+app.use('/api/demand-letters', demandLettersRouter); // New route
 
 // ---------------- Health-check ----------------
 app.get('/', (req, res) => {
