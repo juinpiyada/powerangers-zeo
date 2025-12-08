@@ -11,7 +11,7 @@ let swaggerDocument = null;
 try {
   swaggerDocument = require('./swagger-output.json');
 } catch (e) {
-  console.warn('⚠ swagger-output.json not found. Run: node swagger.js');
+  console.warn('⚠️ swagger-output.json not found. Run: node swagger.js');
 }
 
 // ---------------- Routes ----------------
@@ -63,7 +63,7 @@ const isVercel = !!process.env.VERCEL;
 // ✅ compute base url
 const BASE_URL =
   process.env.BASE_URL ||
-  (isVercel ? 'https://powerangers-zeo.vercel.app' : http://localhost:${PORT});
+  (isVercel ? 'https://powerangers-zeo.vercel.app' : `http://localhost:${PORT}`);
 
 // ---------------- Middleware ----------------
 app.use(cors({
@@ -128,7 +128,7 @@ app.get('/', (req, res) => {
     status: 'OK',
     timestamp: new Date().toISOString(),
     base_url: BASE_URL,
-    swagger: ${BASE_URL}/docs,  // Corrected this line with string interpolation
+    swagger: `${BASE_URL}/docs`,  // Fixed string interpolation
   });
 });
 
@@ -139,8 +139,8 @@ async function startLocal() {
     console.log('✅ Connected to Postgres at', rows[0].now);
 
     app.listen(PORT, () => {
-      console.log(🚀 Server running at ${BASE_URL});
-      console.log(📚 Swagger Docs at ${BASE_URL}/docs);
+      console.log(`🚀 Server running at ${BASE_URL}`);
+      console.log(`📚 Swagger Docs at ${BASE_URL}/docs`);
     });
   } catch (err) {
     console.error('❌ Could not connect to Postgres:', err);
