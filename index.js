@@ -11,7 +11,7 @@ let swaggerDocument = null;
 try {
   swaggerDocument = require('./swagger-output.json');
 } catch (e) {
-  console.warn('⚠️ swagger-output.json not found. Run: node swagger.js');
+  console.warn('⚠ swagger-output.json not found. Run: node swagger.js');
 }
 
 // ---------------- Routes ----------------
@@ -52,15 +52,6 @@ const cmsPayment = require('./routes/cmsPayment');
 const cmsStudentFeeInvoice = require('./routes/cmsStudentFeeInvoice');
 const cmsStuScholarship = require('./routes/cmsStuScholarship');
 
-// New Routes (Version 2)
-const teacherDtlsApi = require('./routes/teacher_dtls_api'); // New route
-const studentAyRoutes = require('./routes/student_ay'); // New route
-const teacherMasterRoutes = require('./routes/teacher_master_bulk_up'); // New route
-const examResultApi = require('./routes/exam_result_api'); // New route
-const masterFetcher = require('./routes/master_fetcher'); // New route
-const smsDeviceRoutes = require('./routes/smsDeviceRoutes'); // New route
-const demandLettersRouter = require('./routes/demandLetters'); // New route
-
 const app = express();
 
 // ✅ localhost default PORT
@@ -72,7 +63,7 @@ const isVercel = !!process.env.VERCEL;
 // ✅ compute base url
 const BASE_URL =
   process.env.BASE_URL ||
-  (isVercel ? 'https://powerangers-zeo.vercel.app' : `http://localhost:${PORT}`);
+  (isVercel ? 'https://powerangers-zeo.vercel.app' : http://localhost:${PORT});
 
 // ---------------- Middleware ----------------
 app.use(cors({
@@ -131,22 +122,13 @@ app.use('/api/cms-payments', cmsPayment);
 app.use('/api/cms-student-fee-invoice', cmsStudentFeeInvoice);
 app.use('/api/cms-stu-scholarship', cmsStuScholarship);
 
-// New Routes (Version 2)
-app.use('/api/teacher-dtls', teacherDtlsApi); // New route
-app.use('/api/student-ay', studentAyRoutes); // New route
-app.use('/api/teacher-master-bulk-up', teacherMasterRoutes); // New route
-app.use('/api/exam-result-raw', examResultApi); // New route
-app.use('/api/master', masterFetcher); // New route
-app.use('/api/sms-device', smsDeviceRoutes); // New route
-app.use('/api/demand-letters', demandLettersRouter); // New route
-
 // ---------------- Health-check ----------------
 app.get('/', (req, res) => {
   res.json({
     status: 'OK',
     timestamp: new Date().toISOString(),
     base_url: BASE_URL,
-    swagger: `${BASE_URL}/docs`,
+    swagger: ${BASE_URL}/docs,  // Corrected this line with string interpolation
   });
 });
 
@@ -157,8 +139,8 @@ async function startLocal() {
     console.log('✅ Connected to Postgres at', rows[0].now);
 
     app.listen(PORT, () => {
-      console.log(`🚀 Server running at ${BASE_URL}`);
-      console.log(`📚 Swagger Docs at ${BASE_URL}/docs`);
+      console.log(🚀 Server running at ${BASE_URL});
+      console.log(📚 Swagger Docs at ${BASE_URL}/docs);
     });
   } catch (err) {
     console.error('❌ Could not connect to Postgres:', err);
